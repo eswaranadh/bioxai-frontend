@@ -5,8 +5,9 @@ import { getHeaders } from "./api";
 
 const AUTHORIZATION = "Authorization";
 const APIKEY = "api-key";
-function get_auth_header(): Record<string, string> {
+export function get_auth_header(): Record<string, string> {
   const jsonHeaders = getHeaders();
+  console.log("get_auth_header", jsonHeaders);
   if (jsonHeaders[AUTHORIZATION]) {
     return { [AUTHORIZATION]: jsonHeaders[AUTHORIZATION] };
   }
@@ -88,10 +89,10 @@ export const requestUploadFile = async (
   }
   uploadPath += path;
   const formData = new FormData();
-  
+
   // Ensure file is properly set
   formData.append('file', file, file.name);
-  
+
   // Convert objects to strings for FormData
   formData.append('ragConfig', JSON.stringify(ragConfig));
   formData.append('useRAG', String(useRAG));

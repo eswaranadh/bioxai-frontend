@@ -1,0 +1,81 @@
+.projects {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.header {
+  margin-bottom: 20px;
+
+  h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+}
+
+.createProject {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+
+  input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border-in-light);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+  }
+}
+
+.projectList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.projectItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--white);
+  border: 1px solid var(--border-in-light);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: var(--gray-50);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.projectIcon {
+  width: 24px;
+  height: 24px;
+  color: var(--primary);
+}
+
+.projectInfo {
+  flex: 1;
+}
+
+.projectName {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--black);
+  margin-bottom: 4px;
+}
+
+.projectDate {
+  font-size: 12px;
+  color: var(--black-50);
+}

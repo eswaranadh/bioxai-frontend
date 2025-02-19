@@ -88,14 +88,14 @@ export const useAccessStore = createPersistStore(
             ...getHeaders(),
           },
         });
-        const jsonBody:DangerConfig = await res.json();
+        const jsonBody: DangerConfig = await res.json();
         console.log("[Config] got config from server", jsonBody);
-        set(() => ({...jsonBody}));
+        set(() => ({ ...jsonBody }));
       } catch (_e: any) {
         console.error("[Config] failed to fetch config");
       } finally {
         fetchState = 2;
-      }        
+      }
     },
     async updateTokenUsage(session_id: string, model: string) {
       requestTokenUsage(session_id, model).then((res: any) => {

@@ -90,11 +90,11 @@ export class ClientApi {
     this.llm = new ChatGPTApi();
   }
 
-  config() {}
+  config() { }
 
-  prompts() {}
+  prompts() { }
 
-  masks() {}
+  masks() { }
 
   async share(messages: ChatMessage[], avatarUrl: string | null = null) {
     const msgs = messages
@@ -146,9 +146,10 @@ export function getHeaders() {
   };
 
   const isAzure = accessStore.provider === ServiceProvider.Azure;
+  console.log("getHeaders", isAzure);
   const authHeader = isAzure ? "api-key" : "Authorization";
   const apiKey = isAzure ? accessStore.azureApiKey : accessStore.openaiApiKey;
-
+  console.log("getHeaders", accessStore);
   const makeBearer = (s: string) => `${isAzure ? "" : "Bearer "}${s.trim()}`;
   const validString = (x: string) => x && x.length > 0;
 

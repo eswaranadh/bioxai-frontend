@@ -30,19 +30,20 @@ import { getClientConfig } from "../config/client";
 import { api } from "../client/api";
 import { useAccessStore, useChatStore } from "../store";
 import { ProductionInfo } from "../utils/datatypes";
-import { 
-  getKnowledgeGraphInfo, 
-  getLLMModels, 
-  getMaskInfo, 
-  getVectorStoreInfo 
+import {
+  getKnowledgeGraphInfo,
+  getLLMModels,
+  getMaskInfo,
+  getVectorStoreInfo
 } from "../utils/prodinfo";
 import { useRAGStore } from "../store/rag";
 import { useKGStore } from "../store/kg";
+import { ProjectsPage } from "./projects";
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
     <div className={styles["loading-content"] + " no-dark"}>
-      {!props.noLogo && <BotIcon width={32} height={32}/>}
+      {!props.noLogo && <BotIcon width={32} height={32} />}
       <LoadingIcon />
     </div>
   );
@@ -168,8 +169,7 @@ function Screen() {
     <div
       className={
         styles.container +
-        ` ${shouldTightBorder ? styles["tight-container"] : styles.container} ${
-          getLang() === "ar" ? styles["rtl-screen"] : ""
+        ` ${shouldTightBorder ? styles["tight-container"] : styles.container} ${getLang() === "ar" ? styles["rtl-screen"] : ""
         }`
       }
     >
@@ -191,6 +191,7 @@ function Screen() {
               <Route path={Path.Settings} element={<Settings />} />
               <Route path={Path.RAG} element={<RAGPage />} />
               <Route path={Path.KG} element={<KGPage />} />
+              <Route path={Path.Projects} element={<ProjectsPage />} />
             </Routes>
           </div>
         </>
@@ -220,7 +221,7 @@ export function Home() {
     console.log("[Config] got config from build time", getClientConfig());
     useAccessStore.getState().fetch().then(() => {
       const strProdInfo = useAccessStore.getState().productionInfo;
-      const theProdInfo: ProductionInfo | undefined = 
+      const theProdInfo: ProductionInfo | undefined =
         strProdInfo === "undefined" ? undefined : JSON.parse(strProdInfo);
       const mask = getMaskInfo(theProdInfo);
       useChatStore.getState().initializeChat(mask);
@@ -245,4 +246,3 @@ export function Home() {
     </ErrorBoundary>
   );
 }
-
