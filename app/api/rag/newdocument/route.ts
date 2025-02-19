@@ -1,30 +1,35 @@
-
-import { unlink, writeFile } from "fs/promises";
+import { unlink, readFile, writeFile } from "fs/promises";
 import * as path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { getServerSideConfig } from "@/app/config/server";
 import { BiochatterPath, ERROR_BIOSERVER_OK, LOCAL_BASE_URL } from "@/app/constant";
 import { prettyObject } from "@/app/utils/format";
-import { BioChatterServerResponse } from "../../common";
 
 const serverConfig = getServerSideConfig();
 
-async function writeToTempFile(f: File): Promise<string> {
-  // save to /tmp
-  const bytes = await f.arrayBuffer()
-  const buffer = Buffer.from(bytes)
-  const filename = nanoid();
-  const extname = path.extname(f.name);
-  const tmpPath = `/tmp/${filename}${extname}`;
-  await writeFile(tmpPath, buffer)
-  return tmpPath;
+async function writeToTempFile(f: Blob, filename: string): Promise<string> {
+  try {
+    // save to /tmp
+    const bytes = await f.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const id = nanoid();
+    const extname = path.extname(filename);
+    const tmpPath = `/tmp/${id}${extname}`;
+
+    console.log('Writing file to:', tmpPath);
+    await writeFile(tmpPath, buffer);
+    return tmpPath;
+  } catch (error) {
+    console.error('Error writing temp file:', error);
+    throw error;
+  }
 }
 
 async function requestNewDocument(
-  tmpFile: string, 
-  filename: string, 
-  ragConfig: string, 
+  tmpFile: string,
+  filename: string,
+  ragConfig: string,
   useRAG: string,
   authValue: string
 ) {
@@ -44,49 +49,143 @@ async function requestNewDocument(
   const timeoutId = setTimeout(() => {
     controller.abort();
   }, 10 * 60 * 1000);
-  const fetchOptions: RequestInit = {
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store",
-      [authHeaderName]: authValue,
-    },
-    method: "POST",
-    body: JSON.stringify({filename, tmpFile, ragConfig, useRAG}),
-    signal: controller.signal
-  };
+
   try {
-    const res = await fetch(fetchUrl, fetchOptions);
-    const jsonBody = await res.json();
-    const value = jsonBody as BioChatterServerResponse;
-    if (value.code !== ERROR_BIOSERVER_OK) {
-      console.error(value.error ?? "Unknown errors occurred in biochatter-server")
+    // Create multipart form-data manually
+    const boundary = `--------------------------${Date.now().toString(16)}`;
+    const fileBuffer = await readFile(tmpFile);
+
+    // Construct the multipart form-data payload
+    const payload = Buffer.concat([
+      // File part
+      Buffer.from(`--${boundary}\r\n`),
+      Buffer.from(`Content-Disposition: form-data; name="file"; filename="${filename}"\r\n`),
+      Buffer.from('Content-Type: text/plain\r\n\r\n'),
+      fileBuffer,
+      Buffer.from('\r\n'),
+
+      // ragConfig part
+      Buffer.from(`--${boundary}\r\n`),
+      Buffer.from('Content-Disposition: form-data; name="ragConfig"\r\n\r\n'),
+      Buffer.from(ragConfig),
+      Buffer.from('\r\n'),
+
+      // useRAG part
+      Buffer.from(`--${boundary}\r\n`),
+      Buffer.from('Content-Disposition: form-data; name="useRAG"\r\n\r\n'),
+      Buffer.from(useRAG),
+      Buffer.from('\r\n'),
+
+      // End boundary
+      Buffer.from(`--${boundary}--\r\n`)
+    ]);
+
+    console.log('Sending to bioserver:', {
+      filename,
+      fileSize: fileBuffer.length,
+      ragConfig,
+      useRAG,
+      url: fetchUrl
+    });
+
+    const response = await fetch(fetchUrl, {
+      method: "POST",
+      headers: {
+        [authHeaderName]: authValue,
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': payload.length.toString()
+      },
+      body: payload,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Bioserver error response:', errorText);
+      throw new Error(errorText);
     }
-    return NextResponse.json(jsonBody);
+
+    return response;
+  } catch (error) {
+    console.error('Error in requestNewDocument:', error);
+    throw error;
   } finally {
     clearTimeout(timeoutId);
-    unlink(tmpFile);
   }
 }
 
-async function handle(request: NextRequest) {
-  const authValue = request.headers.get("Authorization") ?? "";
-  const data = request.formData();
-  const file: File | null = (await data).get('file') as unknown as File;
-  const ragConfig: string | null = (await data).get('ragConfig') as unknown as string;
-  const useRAG: string | null = (await data).get("useRAG") as unknown as string;
-  
-  if (!file) {
-    return NextResponse.json({ success: false })
-  }
+export async function POST(request: NextRequest) {
+  let tmpFile: string | undefined;
 
   try {
-    const tmpFile = await writeToTempFile(file);
-    const res = await requestNewDocument(tmpFile, file.name, ragConfig??"", useRAG??"false", authValue);
-    return res;
+    const formData = await request.formData();
+    console.log('Received form data fields:', Array.from(formData.keys()));
+
+    // Get all required fields
+    const file = formData.get('file');
+    const ragConfig = formData.get('ragConfig');
+    const useRAG = formData.get('useRAG');
+
+    // Validate all required fields are present
+    if (!file || !ragConfig || !useRAG) {
+      console.error('Missing required fields:', {
+        hasFile: !!file,
+        hasRagConfig: !!ragConfig,
+        hasUseRAG: !!useRAG
+      });
+      return NextResponse.json({
+        error: "Missing required fields",
+        fields: {
+          file: !!file,
+          ragConfig: !!ragConfig,
+          useRAG: !!useRAG
+        }
+      }, { status: 400 });
+    }
+
+    // Validate file is a Blob/File
+    if (!(file instanceof Blob)) {
+      console.error('Invalid file type:', typeof file);
+      return NextResponse.json({
+        error: "Invalid file type",
+        type: typeof file
+      }, { status: 400 });
+    }
+
+    // Get the filename
+    const filename = (file as any).name || 'uploaded-file.txt';
+
+    // Write file to temp location
+    tmpFile = await writeToTempFile(file, filename);
+
+    // Forward request to bioserver
+    const authValue = request.headers.get("Authorization") ?? "";
+    const res = await requestNewDocument(
+      tmpFile,
+      filename,
+      ragConfig.toString(),
+      useRAG.toString(),
+      authValue
+    );
+
+    const data = await res.json();
+    console.log('Response from bioserver:', data);
+    return NextResponse.json(data);
+
   } catch (e: any) {
-    console.error(e);
-    return NextResponse.json(prettyObject(e));
+    console.error('Error processing upload:', e);
+    return NextResponse.json({
+      error: e.message || "Unknown error occurred",
+      stack: process.env.NODE_ENV === 'development' ? e.stack : undefined
+    }, { status: 500 });
+  } finally {
+    // Clean up temp file
+    if (tmpFile) {
+      try {
+        await unlink(tmpFile);
+      } catch (e) {
+        console.error('Error deleting temp file:', e);
+      }
+    }
   }
 }
-
-export const POST = handle;

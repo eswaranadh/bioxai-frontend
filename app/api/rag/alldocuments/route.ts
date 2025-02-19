@@ -25,15 +25,15 @@ async function handle(request: NextRequest) {
     const v = (await res.json()) as BioChatterServerResponse;
     if (v.code !== ERROR_BIOSERVER_OK) {
       if (v.code === ERROR_BIOSERVER_MILVUS_CONNECT_FAILED) {
-        return NextResponse.json({code: ERROR_BIOSERVER_MILVUS_CONNECT_FAILED});
+        return NextResponse.json({ code: ERROR_BIOSERVER_MILVUS_CONNECT_FAILED });
       } else {
-        return NextResponse.json({code: ERROR_BIOSERVER_UNKNOWN,})
+        return NextResponse.json({ code: ERROR_BIOSERVER_UNKNOWN, })
       }
     } else {
       console.log(v.error ?? "Unkonw errors occurred in biochatter-server")
     }
     const value = v as any;
-    return NextResponse.json({documents: value.documents??[]})
+    return NextResponse.json({ documents: value.documents ?? [] })
   } catch (e: any) {
     console.error(e);
     return NextResponse.json(prettyObject(e));

@@ -22,25 +22,25 @@ export const createEmptyRAGConfig = (
 ): RAGConfig => 
 ({
   connectionArgs: {
-    host: host??"local", 
+    host: host??"milvus-standalone", 
     port: port??"19530",
     user,
     password
   },
   splitByChar: true,
-  chunkSize: 1000,
-  overlapSize: 0,
-  resultNum: 3,
+  chunkSize: 500,
+  overlapSize: 50,
+  resultNum: 5,
   docIdsWorkspace: []
 });
 
 const is_rag_config_default_config = (config: RAGConfig): boolean => {
   return (
-    config.connectionArgs.host === "local" && 
+    config.connectionArgs.host === "milvus-standalone" && 
     config.connectionArgs.port === "19530" &&
-    config.resultNum === 3 &&
-    config.chunkSize === 1000 &&
-    config.overlapSize === 0 &&
+    config.resultNum === 5 &&
+    config.chunkSize === 500 &&
+    config.overlapSize === 50 &&
     config.docIdsWorkspace?.length === 0
   );
 }

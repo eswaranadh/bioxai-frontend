@@ -10,11 +10,9 @@ export interface KGConfig {
 }
 
 export const createEmptyKGConfig = (): KGConfig => ({
-  connectionArgs: {
-    host: "local",
-    port: "7687",
-    user: "neo4j",
-    password: "neo4j",
+  "connectionArgs": {
+    "host": "milvus-standalone",  // Note: "local" won't work, needs to be "milvus-standalone"
+    "port": "19530"
   },
   resultNum: 3,
 });
@@ -66,7 +64,7 @@ export const useKGStore = createPersistStore(
       updateConfig(updater: (config: KGConfig) => void) {
         const config = get().config;
         updater(config);
-        set(() => ({config}))
+        set(() => ({ config }))
       }
     };
     return methods;

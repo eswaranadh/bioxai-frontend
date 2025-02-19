@@ -27,7 +27,7 @@ export const requestKGConnectionStatus = async (
     headers: {
       [HDR_CONTENT_TYPE]: HDR_APPLICATION_JSON,
     },
-    body: JSON.stringify({connectionArgs})
+    body: JSON.stringify({ connectionArgs })
   });
 
   return res;
@@ -54,7 +54,7 @@ export const requestAllVSDocuments = async (
   return res;
 }
 
-export const requestVSConnectionStatus = async(
+export const requestVSConnectionStatus = async (
   connectionArgs: DbConnectionArgs
 ) => {
   const RAG_URL = ApiPath.RAG;
@@ -87,17 +87,32 @@ export const requestUploadFile = async (
     uploadPath += '/';
   }
   uploadPath += path;
-  const data = new FormData();
-  data.set('file', file);
-  data.set('ragConfig', JSON.stringify(ragConfig));
-  data.set('useRAG', useRAG as unknown as string);
+  const formData = new FormData();
+  
+  // Ensure file is properly set
+  formData.append('file', file, file.name);
+  
+  // Convert objects to strings for FormData
+  formData.append('ragConfig', JSON.stringify(ragConfig));
+  formData.append('useRAG', String(useRAG));
+
+  // Debug logging
+  console.log('Uploading file:', {
+    fileName: file.name,
+    fileSize: file.size,
+    ragConfig: JSON.stringify(ragConfig),
+    useRAG: String(useRAG)
+  });
+
   const res = await fetch(uploadPath, {
     method: "POST",
-    body: data,
+    body: formData,
     headers: {
       ...get_auth_header(),
-    },
+      // Note: Don't set Content-Type header, let the browser set it with boundary
+    }
   });
+
   return res;
 }
 
@@ -115,7 +130,7 @@ export const requestRemoveDocument = async (
   delPath += path;
   const res = await fetch(delPath, {
     method: "DELETE",
-    body: JSON.stringify({ docId, connectionArgs, docIds}),
+    body: JSON.stringify({ docId, connectionArgs, docIds }),
     headers: {
       ...get_auth_header()
     }

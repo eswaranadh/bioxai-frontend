@@ -137,7 +137,7 @@ export const ERROR_BIOSERVER_UNKNOWN = 5100
 export const ERROR_BIOSERVER_MILVUS_UNKNOWN = 5101
 export const ERROR_BIOSERVER_MILVUS_CONNECT_FAILED = 5102
 export const ERROR_BIOSERVER_EXCEEDS_TOKEN_LIMIT = 5103
- 
+
 export const HDR_CONTENT_TYPE = "Content-Type";
 export const HDR_APPLICATION_JSON = "application/json";
 

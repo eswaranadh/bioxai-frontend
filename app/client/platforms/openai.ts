@@ -80,7 +80,7 @@ export class ChatGPTApi implements LLMApi {
         model: options.config.model,
       },
     };
-    
+
     const requestPayload = {
       messages,
       stream: options.config.stream,
@@ -92,12 +92,12 @@ export class ChatGPTApi implements LLMApi {
       // max_tokens: Math.max(modelConfig.max_tokens, 1024),
       // Please do not ask me why not send max_tokens, no reason, this param is just shit, I dont want to explain anymore.
       session_id: useChatStore.getState().currentSession().id,
-      useRAG: options.agentInfo?.useRAG??false,
-      useKG: options.agentInfo?.useKG??false,
+      useRAG: options.agentInfo?.useRAG ?? false,
+      useKG: options.agentInfo?.useKG ?? false,
       ragConfig: options.agentInfo?.ragConfig,
       kgConfig: options.agentInfo?.kgConfig,
       oncokbConfig: options.agentInfo?.oncokbConfig,
-      useAutoAgent: options.agentInfo?.useAutoAgent??false,
+      useAutoAgent: options.agentInfo?.useAutoAgent ?? false,
     };
 
     console.log("[Request] openai payload: ", requestPayload);
@@ -184,7 +184,7 @@ export class ChatGPTApi implements LLMApi {
               try {
                 const resJson = await res.clone().json();
                 extraInfo = prettyObject(resJson);
-              } catch {}
+              } catch { }
 
               if (res.status === 401) {
                 responseTexts.push(Locale.Error.Unauthorized);

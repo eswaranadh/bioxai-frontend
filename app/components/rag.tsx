@@ -48,17 +48,17 @@ export function RAGPage() {
   const accessStore = useAccessStore();
   const ragStore = useRAGStore();
   const prodInfo = accessStore.productionInfo === "undefined" ? undefined : JSON.parse(accessStore.productionInfo);
-  let ragProdInfo = (prodInfo?.VectorStore ?? {servers: []}) as DbConfiguration;
+  let ragProdInfo = (prodInfo?.VectorStore ?? { servers: [] }) as DbConfiguration;
   const [documents, setDocuments] = useState<Array<any>>([]);
   const [uploading, setUploading] = useState(false);
   const [connected, setConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const ragConfig = ragStore.currentRAGConfig();
   const [connectionArgs, setConnectionArgs] = useState(
-    getVectorStoreConnectionArgsToDisplay(ragConfig.connectionArgs, ragProdInfo.servers??[])
+    getVectorStoreConnectionArgsToDisplay(ragConfig.connectionArgs, ragProdInfo.servers ?? [])
   );
   const [globalVS, setGlobalVS] = useState(
-    getVectorStoreServerGlobal(ragConfig.connectionArgs, ragProdInfo.servers??[])
+    getVectorStoreServerGlobal(ragConfig.connectionArgs, ragProdInfo.servers ?? [])
   );
 
   const updateDocuments = useDebouncedCallback(async () => {
@@ -67,7 +67,7 @@ export function RAGPage() {
     console.log(`[updateDocuments] ${ragConfig.connectionArgs.host}`);
     try {
       const res = await requestAllVSDocuments(
-        getVectorStoreConnectionArgsToConnect(connectionArgs, ragProdInfo.servers??[]), 
+        getVectorStoreConnectionArgsToConnect(connectionArgs, ragProdInfo.servers ?? []),
         globalVS ? undefined : theConfig.docIdsWorkspace,
       );
       const value = await res.json();
@@ -92,9 +92,9 @@ export function RAGPage() {
     const connectionStatusUrl = fetchUrl + "connectionstatus";
     setIsReconnecting(true);
     const connectionArgsAddress = getVectorStoreConnectionArgsToConnect(
-      connectionArgs, ragProdInfo.servers??[]
+      connectionArgs, ragProdInfo.servers ?? []
     );
-    const theGlobalVS = getVectorStoreServerGlobal(connectionArgs, ragProdInfo.servers??[]);
+    const theGlobalVS = getVectorStoreServerGlobal(connectionArgs, ragProdInfo.servers ?? []);
     setGlobalVS(theGlobalVS);
     try {
       const res = await requestVSConnectionStatus(connectionArgsAddress);
@@ -121,7 +121,9 @@ export function RAGPage() {
 
   async function onUpload(file: File, done: () => void) {
     try {
+      alert('Uploading file:');
       setUploading(true);
+      console.log('Uploading file:', file);
       const res = await requestUploadFile(
         file, ragConfig, useRAGStore.getState().useRAG
       );
@@ -156,9 +158,9 @@ export function RAGPage() {
         ragConfig.connectionArgs,
         docId,
         (ragConfig.docIdsWorkspace !== undefined &&
-          ragConfig.docIdsWorkspace.length > 0) ? 
+          ragConfig.docIdsWorkspace.length > 0) ?
           ragConfig.docIdsWorkspace : [docId],
-      )      
+      )
       if (!res.ok) {
         throw new Error(await res.text());
       }
@@ -249,7 +251,7 @@ export function RAGPage() {
                     </div>
                   ) : (<></>)}
                   <div className={styles["documents"]}>
-                    <ul style={{listStyleType: "square"}}>
+                    <ul style={{ listStyleType: "square" }}>
                       {documents.map((doc) => (
                         <li key={doc.id ?? ""}>
                           <DocumentComponent doc={doc} removable={!globalVS} />
@@ -320,13 +322,13 @@ export function RAGPage() {
                         onChange={(e) => {
                           const val = e.currentTarget?.value ?? DEFAULT_HOST;
                           let default_server = false;
-                          for (let rag of ragProdInfo.servers??[]) {
+                          for (let rag of ragProdInfo.servers ?? []) {
                             if (rag.server === val) {
                               default_server = true;
                               setConnectionArgs({
                                 ...connectionArgs,
                                 host: rag.server,
-                                port: rag.port??DEFAULT_PORT,
+                                port: rag.port ?? DEFAULT_PORT,
                               })
                               ragStore.updateCurrentRAGConfig(
                                 (config) => {
@@ -346,11 +348,11 @@ export function RAGPage() {
                           if (!default_server) {
                             setConnectionArgs({
                               ...connectionArgs,
-                              host:e.currentTarget?.value??DEFAULT_HOST
+                              host: e.currentTarget?.value ?? DEFAULT_HOST
                             });
                             ragStore.updateCurrentRAGConfig(
                               (config) => (
-                                config.connectionArgs.host = e.currentTarget?.value??DEFAULT_HOST
+                                config.connectionArgs.host = e.currentTarget?.value ?? DEFAULT_HOST
                               )
                             )
                           }
